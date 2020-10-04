@@ -18,7 +18,7 @@ narginchk(1,1);
 x = xyz(:,1); y = xyz(:,2); z = xyz(:,3);
 
 rad = sqrt(x.*x + y.*y + z.*z);
-lat = asin(z./r);
+lat = asin(z./rad);
 lon = atan2(y, x);
 
 % normalizes the longitute into [0, 2*pi].

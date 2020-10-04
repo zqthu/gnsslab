@@ -23,7 +23,7 @@ function [sp3_hdr, sp3] = read_sp3( sp3_file )
 %       .orbit_type     = orbit type
 %       .rel_ins        = release institution
 %       .start_gpst     = start GPS time [GPSW GPSS]
-%       .sep            = separation of seconds between epochs
+%       .interval       = interval of seconds between epochs
 %       .mjd            = MJD of start time (including fractions)
 %       .sat_num        = satellite number
 %       .sat_list       = satellite list[]
@@ -69,7 +69,7 @@ end
 
 % check file
 if sp3_hdr.version ~='c' || sp3_hdr.sp3_type ~= 'P'
-    print("WARNING: This file is not supported. Unexpected error would occur.");
+    warning("This file is not supported. Unexpected error would occur.");
 end
 
 % preallocate memory
