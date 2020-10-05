@@ -80,6 +80,9 @@ space(1:80) = ' ';
 
 while(~isempty(buf))
     line = [buf{1}, space];
+    if (line(1:3) == "EOF")
+        break
+    end
     % get time
     if line(1) == '*'
         time_t = textscan(line(4:31), '%f%f%f%f%f%f%*[^\n]');
@@ -112,6 +115,9 @@ while(~isempty(buf))
     sp3(m,:) = [sat, time_t, data];
     buf(1) = []; % remove first line
 end
+
+% remove the extra preallocated memory
+sp3(m+1:end,:) = [];
 
 % reset unit
 sp3(:,8:10) = sp3(:,8:10) * 1000; % x y z , km -> m

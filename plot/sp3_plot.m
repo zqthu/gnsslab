@@ -1,4 +1,4 @@
-% plot by navigation file in WGS84 reference system:
+% plot by sp3 file in WGS84 reference system:
 % 1. Earth centered earth fixed(ECEF)
 % 2. Earth centered inertia (ECI)
 % 3. Worldmap
@@ -6,7 +6,9 @@
 
 % ---------------- settings ----------------
 % navigation file
-nav_file = './brdc2450.20n';
+sp3_file = './igs21212.sp3';
+% order of lagrange polynominal
+order = 5;
 % sampling intervals (sec)
 interval = 30;
 % reveiver position of sky plot [latitude, longitude, height]
@@ -24,25 +26,26 @@ anime = [0,0,0,0]; % ECEF orbit, ECI orbit, worldmap plot, sky plot
 checkbox = ["G08","G10", "G18", "G24","G25", "G32"]; % Slots: C3, E2, D3, A1, B2, F1
 
 % Note: to get satellite PRN list, run
-% prn_list = sat2prn(unique(wgs84(:,1)));
+% prn_list = sat2prn(unique(itrf(:,1)));
 
 % -------------- preprocessing --------------
 % read navigation file
-[hdr, nav] = read_rinex_nav(nav_file);
+[sp3_hdr, sp3] = read_sp3(sp3_file);
 % select checked satellites
-bool_mat = zeros([length(nav(:,1)),1]);
+bool_mat = zeros([length(sp3(:,1)),1]);
 for i = 1:length(checkbox)
-    bool_mat = bool_mat | (nav(:,1)==prn2sat(char(checkbox(i))));
+    bool_mat = bool_mat | (sp3(:,1)==prn2sat(char(checkbox(i))));
 end
-nav = nav(bool_mat,:);
-% transform nav into wgs84
-wgs84 = nav2wgs84(nav,interval);
+sp3 = sp3(bool_mat,:);
+% transform sp3 into itrf
+itrf = sp32itrf(sp3, order, interval);
+
 
 % ---------------- plot ECEF ----------------
 if sum(anime) == 0 || anime(1)
     clf(figure(1));
     figure(1);
-    plot_orbit(wgs84,'ECEF',anime(1));
+    plot_orbit(itrf,'ECEF',anime(1));
 end
 
 % ---------------- plot ECI ----------------
@@ -50,29 +53,31 @@ if sum(anime) == 0 || anime(2)
     % convert xyz to eci_xyz
     Omega_e = 7.292115147 * 1e-5; % (rad/sec) mean earth rotation rate [WGS84]
     pi = 3.1415926535898; % pi
-    gpst = cal2gpst(wgs84(:, 2:7)); % GPS time
-    GAST_week = gpst2gast([hdr.gpst(1),0]); % GAST_week
+    gpst = cal2gpst(itrf(:, 2:7)); % GPS time
+    GAST_week = gpst2gast([sp3_hdr.start_gpst(1),0]); % GAST_week
     psi = -Omega_e * gpst(:,2) - GAST_week; % rotation angle  = -omega_e * t -  GAST_week
     R_z = geo_spinz(psi); % rotation matrix 3x3xn
-    wgs84_eci = wgs84;
-    for i = 1:length(wgs84_eci(:,1))
-        wgs84_eci(i,8:10) = (R_z(:,:,i) * wgs84_eci(i,8:10).').'; 
+    itrf_eci = itrf;
+    for i = 1:length(itrf_eci(:,1))
+        itrf_eci(i,8:10) = (R_z(:,:,i) * itrf_eci(i,8:10).').'; 
     end
     clf(figure(2));
     figure(2);
-    plot_orbit(wgs84_eci,'ECI',anime(2),1);
+    plot_orbit(itrf_eci,'ECI',anime(2),1);
 
     clear Omega_e pi i wgs84_eci GAST_week psi gpst R_z
 end
+
 % ---------------- map plot ----------------
 if sum(anime) == 0 || anime(3)
     clf(figure(3));
     figure(3);
-    plot_map(wgs84, anime(3));
+    plot_map(itrf, anime(3));
 end
+
 % ---------------- sky plot ----------------
 if sum(anime) == 0 || anime(4)
     clf(figure(4));
     figure(4);
-    plot_sky(wgs84, rec, anime(4));
+    plot_sky(itrf, rec, anime(4));
 end

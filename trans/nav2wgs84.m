@@ -45,7 +45,7 @@ end
 sat_list = unique(nav(:,1));
 
 % allocate
-wgs84 = nan(int64(period/interval)+1, 10); %sat, cal[year,month,day,hour,minute,second], x, y, z, gps second of week
+wgs84 = nan(int64(period/interval)+1, 10); %sat, cal[year,month,day,hour,minute,second], x, y, z; question for int64?
 idx = 0; % index of wgs84
 
 % constant
@@ -53,16 +53,13 @@ mu = 3.986008 * 1e14; % (m^3/sec^2) earth's universal gravitational constant
 Omega_e = 7.292115147 * 1e-5; % (rad/sec) mean earth rotation rate
 pi = 3.1415926535898; % pi
 
-% GAST
-
-
 % start sampling for each satellite
 for i = 1:length(sat_list)
     sat = sat_list(i); % sat number
     nav_ref = nav(nav(:,1)==sat,:); % reference navigation message of sat
     num_ref = length(nav_ref(:,1)); % length of list of nav_ref
     index_ref = 1; % reference index
-    start_t = nav(1,19); % start second of week of sampling period
+    start_t = nav(i,19); % start second of week of sampling period
     for t = start_t:interval:(period+start_t)
         % get reference line of nav
         if index_ref < num_ref && nav_ref(index_ref+1,19) <= t

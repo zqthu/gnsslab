@@ -1,4 +1,4 @@
-function plot_orbit(stxyz, tit, anime)
+function plot_orbit(stxyz, tit, anime, rotation)
 %plot_orbit - plot satellite orbits and position
 %
 % Syntax: plot_orbit(stxyz)
@@ -11,6 +11,7 @@ function plot_orbit(stxyz, tit, anime)
 %   OPTIONAL:
 %   title    - title of the plot
 %   anime    - refresh the plot [default 1 for refresh] 
+%   rotation - rotation of earth [default 0 for not rotating, only functions when anime==1]
 %
 % OUTPUT:
 %   None
@@ -22,6 +23,11 @@ end
 if nargin < 3
     anime = 1;
 end
+if nargin < 4
+    rotation = 0;
+end
+% constant
+Omega_e = 7.292115147 * 1e-5; % (rad/sec) mean earth rotation rate [WGS84]
 
 % figure
 % figure(1)
@@ -36,7 +42,7 @@ Re = 6371008.7714 ;
 xe = xe * Re;
 ye = ye * Re;
 ze = ze * Re;
-mesh(xe,ye,ze); %画单位球面
+earth = mesh(xe,ye,ze); %画单位球面
 hold on;
 
 % start plot
@@ -81,12 +87,24 @@ axis equal;
 
 % refresh
 if anime
+    skip = 10;
+    delta_gpss = cal2gpst(stxyz(index(1)+skip,2:7)) - cal2gpst(stxyz(index(1),2:7));
+    delta_gpss = delta_gpss(2);
+    Rz = geo_spinz(-delta_gpss * Omega_e); % rotation of earth for every delta_gpss
     while true
         dot.XData = stxyz(index,8);
         dot.YData = stxyz(index,9);
         dot.ZData = stxyz(index,10);
         t.String = ["Time ",join(string(stxyz(index(1),2:7)),["/","/"," ",":",":"])];
-        index = index + 10;
+        if rotation
+            xe = Rz(1,1) * xe + Rz(1,2) * ye + Rz(1,3) * ze;
+            ye = Rz(2,1) * xe + Rz(2,2) * ye + Rz(2,3) * ze;
+            ze = Rz(3,1) * xe + Rz(3,2) * ye + Rz(3,3) * ze;
+            earth.XData = xe;
+            earth.YData = ye;
+            earth.ZData = ze;
+        end
+        index = index + skip;
         pause(0.1);
         if prod(index > refresh_period(:,2))
             index = refresh_period(:,1);
