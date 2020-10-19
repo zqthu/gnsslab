@@ -12,7 +12,7 @@ order = 5;
 % sampling intervals (sec)
 interval = 30;
 % reveiver position of sky plot [latitude, longitude, height]
-rec = [39.907500, 116.388056, 6371008.7714]; % Beijing, llh = [39.907500, 116.388056, 6371008.7714]
+rec = [39.907500, 116.388056, 0]; % Beijing, llh = [39.907500, 116.388056, 0]
 
 % animation checkbox
 % 0 for static, while 1 for animation
